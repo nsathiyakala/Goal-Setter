@@ -39,7 +39,7 @@ exports.registerUser = async (req, res) => {
                 email: registeruser.Email,
                 token: generateTokens(registeruser._id)
             }
-        })
+        }) 
     }
     else {
         res.status(400).json({

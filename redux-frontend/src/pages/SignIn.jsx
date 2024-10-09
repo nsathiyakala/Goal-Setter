@@ -1,5 +1,9 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {useDispatch,useSelector} from "react-redux"
+import {useNavigate} from "react-router-dom"
+import {reset,register} from "../Features/Auth/authSlice"
+import Spinner from "../Components/spinner"
 
 
 
@@ -23,9 +27,30 @@ const SignIn = () => {
     }
 
     const [success, notSuccess] = useState(true)
-    const [message, setMessage] = useState("")
+    const [Errmessage, setErrMessage] = useState("")
     const [password, checkPassword]= useState(true)
 
+    const navigate = useNavigate()
+    const dispatch =useDispatch()
+
+    const {user,isLoading,isError, isSuccess,message }=useSelector((state)=>state.auth)
+
+    useEffect(()=>{
+        if(isError){
+            notSuccess(false)
+            setErrMessage(message)
+        }
+        if(isSuccess && user){
+            console.log(isSuccess);
+            console.log(user);
+            navigate("/dashboard")
+        }
+
+        return () => {
+            dispatch(reset());  
+        };
+
+    },[isError, isSuccess,user,message,dispatch,navigate])
 
 
     const fromSubmit = (e) => {
@@ -33,26 +58,28 @@ const SignIn = () => {
 
 
         if (Password===ConfirmPassword) {
-            fetch(process.env.REACT_APP_URL + "/newUser", {
-                method: "POST",
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formdata)
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log(data);
-                    if (data.status === false) {
-                        notSuccess(false)
-                        setMessage(data.message)
-                    }
-    
-                    setFormdata({
-                        Name: "",
-                        Email: "",
-                        Password: "",
-                        ConfirmPassword: ""
-                    })
-                })
+        //     fetch(process.env.REACT_APP_URL + "/newUser", {
+        //         method: "POST",
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify(formdata)
+        //     })
+        //         .then((response) => response.json())
+        //         .then((data) => {
+        //             console.log(data);
+                    // if (data.status === false) {
+                    //     notSuccess(false)
+                    //     setErrMessage(data.message)
+                    // }
+
+                    const Userdata = {
+                        Name: Name,
+                        Email: Email,
+                        Password: Password
+                    };
+
+                    dispatch(register(Userdata))
+                    
+                // })
                 .catch(error => console.error(error))
         }
         else{
@@ -61,6 +88,10 @@ const SignIn = () => {
 
        
        
+    }
+
+    if(isLoading){
+       return <Spinner/>
     }
 
 
@@ -94,7 +125,7 @@ const SignIn = () => {
 
                     {!success &&
                         <div className="mb-3">
-                            <p style={{ color: "red" }}>{message} !</p>
+                            <p style={{ color: "red" }}>{Errmessage} !</p>
                         </div>
                     }
 

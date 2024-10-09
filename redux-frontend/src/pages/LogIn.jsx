@@ -1,5 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import {useDispatch,useSelector} from "react-redux"
+import {useNavigate} from "react-router-dom"
+import { reset,login } from '../Features/Auth/authSlice'
+import Spinner from "../Components/spinner"
+
 
 const LogIn = () => {
 
@@ -17,31 +22,45 @@ const LogIn = () => {
     }))
   })
 
+ 
+
+
   const [success, notSuccess] = useState(true)
-  const [message, setMessage] = useState("")
+  const [Errmessage, setErrMessage] = useState("")
+
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const {user,isLoading,isError, isSuccess,message } =useSelector((state)=>state.auth)
+
+  useEffect(()=>{
+
+    if(isError){
+      notSuccess(false)
+      setErrMessage(message)
+    }
+    if(isSuccess){
+      navigate("/dashboard")
+    }
+    return ()=>{
+      dispatch(reset())
+    }
+  },[isError,isSuccess,user,message,dispatch,navigate])
 
   const fromSubmit = (e) => {
     e.preventDefault()
-    fetch(process.env.REACT_APP_URL + "/loginUser", {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formdata)
-    })
-      .then((response) => response.json())
 
-      .then((data) => {
-        console.log(data);
-
-        if (data.status === false) {
-          notSuccess(false)
-          setMessage(data.message)
+        const Userdata= {
+          Email: Email,
+          Password: Password
         }
 
-        setFormdata({
-          Email: "",
-          Password: ""
-        })
-      })
+        dispatch(login(Userdata))
+ 
+  }
+
+  if(isLoading){
+    return <Spinner/>
   }
 
 
@@ -61,7 +80,7 @@ const LogIn = () => {
 
           {!success &&
             <div>
-              <p style={{color:"red"}}>{message}</p>
+              <p style={{color:"red"}}>{Errmessage}</p>
             </div>
           }
           <div>
