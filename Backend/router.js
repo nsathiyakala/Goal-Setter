@@ -11,4 +11,4 @@ router.route("/getUser").get(protect,getUser)
 router.route("/").get(protect,getGoals).post(protect,postGoal)
 router.route("/:id").put(protect,putGoal).delete(protect,deleteGoal)
 
-module.exports=router    
+module.exports=router            

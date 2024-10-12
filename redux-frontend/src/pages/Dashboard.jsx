@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { logOut } from '../Features/Auth/authSlice'
 import { useNavigate } from 'react-router-dom'
-import { CreateGoal } from '../Features/Goals/goalslice'
+import { CreateGoal, getGoal, reset } from '../Features/Goals/goalslice'
+import Spinner from '../Components/spinner'
+
 
 const Dashboard = () => {
 
   const { user } = useSelector((state) => state.auth)
+  const { goals, isError, message, isloading } = useSelector((state) => state.goals)
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -14,7 +17,18 @@ const Dashboard = () => {
     if (!user) {
       navigate("/")
     }
-  }, [user])
+    // if (isSuccess){
+    //   console.log("success")
+    // }
+    if (isError) {
+      console.log(message)
+    }
+
+    dispatch(getGoal())
+
+    return () => dispatch(reset())
+
+  }, [user, isError, message, dispatch])
 
   const [goal, setGoal] = useState("")
 
@@ -26,12 +40,17 @@ const Dashboard = () => {
   }
   const onSubmit = (e) => {
     e.preventDefault()
-    
-    const text ={
-      text: goal
-    }
-    dispatch(CreateGoal(text))
-   }
+
+
+    console.log(goal);
+
+    dispatch(CreateGoal(goal))
+    setGoal("")
+  }
+
+  if (isloading) {
+    return <Spinner />
+  }
 
   return (
     <>
@@ -45,7 +64,7 @@ const Dashboard = () => {
       <section className='container d-flex flex-column justify-content-center  text-center' style={{ marginTop: "60px" }}>
         <div>
           <div>
-            <h6>Welcome Again {user.name}</h6>
+            <h6>Welcome Again {user && user.data.name}</h6>
             <h4>Dashboard</h4>
           </div>
           <form className='p-5 mt-3' action="submit" onSubmit={onSubmit} >
@@ -69,16 +88,29 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row">1</th>
-                <td>Place Job</td>
-                <td>4/10/24</td>
-                <td >
-                  <button className="btn btn-dark ">Edit</button>
-                  <button className="btn btn-dark mx-2">Delete</button>
-                </td>
-              </tr>
-             
+              { goals.message && goals.message.length === 0 ?
+                (<tr>
+                  <th scope='row' colSpan="4">No Goals Available</th>
+                </tr>) :
+                  (goals.message && goals.message.map((goal, index) => 
+                    
+                  (<tr key={goal._id}>
+                    <th scope="row">{index+1}</th>
+                    <td>{goal.text}</td>
+                    <td>{new Date(goal.createdAt).toLocaleDateString()}</td>
+                    <td >
+                      <button className="btn btn-dark ">Edit</button>
+                      <button className="btn btn-dark mx-2">Delete</button>
+                    </td>
+                  </tr>)
+                )
+
+                )
+
+              }
+
+
+
             </tbody>
           </table>
         </div>
