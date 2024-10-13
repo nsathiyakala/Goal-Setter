@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { logOut } from '../Features/Auth/authSlice'
 import { useNavigate } from 'react-router-dom'
-import { CreateGoal, getGoal, reset } from '../Features/Goals/goalslice'
+import { CreateGoal, getGoal, reset, deleteGoal, putGoal } from '../Features/Goals/goalslice'
 import Spinner from '../Components/spinner'
+
 
 
 const Dashboard = () => {
@@ -31,6 +32,8 @@ const Dashboard = () => {
   }, [user, isError, message, dispatch])
 
   const [goal, setGoal] = useState("")
+  const [editGoal, setEditGoal] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
 
   const handlelogOut = () => {
@@ -46,6 +49,36 @@ const Dashboard = () => {
 
     dispatch(CreateGoal(goal))
     setGoal("")
+  }
+
+  const handleDelete = (id) => {
+    dispatch(deleteGoal(id))
+  }
+
+  const handleEditbtn = (goal) => {
+    setEditGoal(goal)
+
+    setIsModalOpen(true)
+  }
+  const closeEdit=()=>{
+    setIsModalOpen(false)
+  }
+
+  const handleEditChange = (e) => {
+    setEditGoal({ ...editGoal, text: e.target.value })
+    console.log(editGoal.text);
+
+  }
+  
+
+  const updateEdit = () => {
+    const id = editGoal._id
+    const text = editGoal.text
+    dispatch(putGoal({ id, text }))
+    .then(()=>{
+      setIsModalOpen(false)
+    })
+    
   }
 
   if (isloading) {
@@ -78,42 +111,68 @@ const Dashboard = () => {
         </div>
 
         <div>
-          <table class="table table-striped">
+          <table className="table table-striped">
             <thead>
               <tr>
                 <th scope="col">Sl.No</th>
                 <th scope="col">Goals</th>
-                <th scope="col">Created At</th>
+                <th scope="col">Created Date</th>
+                <th scope="col">Created Time</th>
                 <th scope="col">Handle</th>
               </tr>
             </thead>
             <tbody>
-              { goals.message && goals.message.length === 0 ?
+              {goals.message && goals.message.length === 0 ?
                 (<tr>
                   <th scope='row' colSpan="4">No Goals Available</th>
                 </tr>) :
-                  (goals.message && goals.message.map((goal, index) => 
-                    
-                  (<tr key={goal._id}>
-                    <th scope="row">{index+1}</th>
-                    <td>{goal.text}</td>
-                    <td>{new Date(goal.createdAt).toLocaleDateString()}</td>
-                    <td >
-                      <button className="btn btn-dark ">Edit</button>
-                      <button className="btn btn-dark mx-2">Delete</button>
-                    </td>
-                  </tr>)
+                (goals.message && goals.message.map((goal, index) =>
+
+
+                (<tr key={goal._id}>
+                  <th scope="row">{index + 1}</th>
+                  <td>{goal.text}</td>
+                  <td>{editGoal ? new Date(goal.updatedAt).toLocaleDateString(): new Date(goal.createdAt).toLocaleDateString()}</td>
+                  <td>{editGoal ? new Date(goal.updatedAt).toLocaleTimeString() : new Date(goal.createdAt).toLocaleTimeString()}</td>
+                  <td >
+                    <button type="button" className="btn btn-dark" onClick={() => handleEditbtn(goal)}>
+                      Edit
+                    </button>
+
+                    <button className="btn btn-dark mx-2" onClick={() => handleDelete(goal._id)}>Delete</button>
+                  </td>
+                </tr>)
+
                 )
 
                 )
 
               }
-
-
-
             </tbody>
           </table>
         </div>
+
+        {isModalOpen &&
+         <div className="modal " style={{display:"block"}}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="exampleModalLabel">Edit Your Goal</h1>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={closeEdit}></button>
+              </div>
+              <div className="modal-body">
+                <input className="form-control " type="text" name='text' id='name' placeholder='Create Goal' value={editGoal.text} onChange={(e) => handleEditChange(e)} />
+
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-dark" onClick={updateEdit}>Save changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+
+
 
 
       </section>

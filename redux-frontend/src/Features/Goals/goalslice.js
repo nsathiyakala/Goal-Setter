@@ -35,6 +35,30 @@ export  const getGoal= createAsyncThunk("goal/get", async(_,thunkAPI)=>{
     }
 })
 
+export const deleteGoal = createAsyncThunk("goal/delete", async(id,thunkAPI)=>{
+    try {
+        const token = thunkAPI.getState().auth.user.data.token
+        return await GoalService.deleteGoal(id,token)
+        
+    } catch (error) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message ||
+        error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+
+})
+
+export const putGoal= createAsyncThunk('goal/put',async({id,text},thunkAPI)=>{
+    try {
+        const token = thunkAPI.getState().auth.user.data.token
+        return await GoalService.putGoal(id,text,token)
+    } catch (error) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message ||
+        error.toString()
+        return thunkAPI.rejectWithValue(message)
+    }
+})
+
 const GoalSlice= createSlice({
     name:"goal",
     initialState,
@@ -50,7 +74,7 @@ const GoalSlice= createSlice({
             console.log(action.payload); 
             state.isSuccess= true;
             state.isLoading=false;
-            state.goals.push(...state.goals, action.payload.message);
+            state.goals.message.push(action.payload.message);
         })
         .addCase(CreateGoal.rejected, (state,action)=>{
             state.isError=true;
@@ -62,9 +86,37 @@ const GoalSlice= createSlice({
         .addCase(getGoal.fulfilled,(state,action)=>{
             state.isSuccess=true;
             state.isLoading=false;
-            state.goals=action.payload
+            state.goals = action.payload;
         })
         .addCase(getGoal.rejected, (state,action)=>{
+            state.isError=true;
+            state.message=action.payload;
+        })
+        .addCase(deleteGoal.pending,(state)=>{
+            state.isLoading=true;
+        })
+        .addCase(deleteGoal.fulfilled,(state,action)=>{
+            state.isSuccess=true;
+            state.isLoading=false;
+            state.goals.message = state.goals.message.filter((goal) => goal._id !== action.payload.message);
+          
+        })
+        .addCase(deleteGoal.rejected, (state,action)=>{
+            state.isError=true;
+            state.message=action.payload;
+        })
+        .addCase(putGoal.pending,(state)=>{
+            state.isLoading=true;
+        })
+        .addCase(putGoal.fulfilled,(state,action)=>{
+            state.isSuccess=true;
+            state.isLoading=false;
+            state.goals.message = state.goals.message.map((goal) =>
+                goal._id === action.payload.message._id ? action.payload.message : goal
+              );     
+        })
+       
+        .addCase(putGoal.rejected, (state,action)=>{
             state.isError=true;
             state.message=action.payload;
         })
