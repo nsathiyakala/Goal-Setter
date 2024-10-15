@@ -14,7 +14,7 @@ exports.protect = async (req, res, next) => {
         next()
     } catch (error) {
         res.status(400)
-        throw new Error("User Not Authorised ")
+        throw new Error("User Not Authorised")
     }
    }
 
